@@ -21,7 +21,7 @@ def verify_password(plain_password, hashed_password):
     
 def get_password_hash(password):
     return pwd_context.hash(password)
-print(get_password_hash('admin1'))
+
 def create_access_token(data : dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     if expires_delta:
@@ -62,7 +62,7 @@ def get_current_user(db: Session = Depends(database.get_db), token: str = Depend
     return user
 
 def get_current_active_user(current_user: models.User = Depends(get_current_user)):
-    if current_user.role != models.RoleEnum.user:
+    if current_user.role != models.RoleEnum.user and current_user.role != models.RoleEnum.admin:
         raise HTTPException(status_code=400, detail='Inactive user')
     return current_user
 
