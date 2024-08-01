@@ -39,9 +39,10 @@ class Permission(Base):
     id = Column(Integer, primary_key=True, index=True)
     task_id = Column(Integer, ForeignKey('tasks.id'))
     user_id = Column(Integer, ForeignKey('users.id'))
-    can_read = Column(Boolean, default=False)
+    can_read = Column(Boolean, default=True)
     can_update = Column(Boolean, default=False)
     can_delete = Column(Boolean, default=False)
+    can_write = Column(Boolean, default=False)
 
     user = relationship('User', back_populates='permissions')
     task = relationship('Task', back_populates='permissions')

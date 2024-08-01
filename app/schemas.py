@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 from datetime import date
 from uuid import UUID
+import enum
+from typing import Optional
+
+class RoleEnum(str, enum.Enum):
+    admin = 'admin'
+    user = 'user'
 
 class TaskBase(BaseModel):
     name: str
@@ -25,17 +31,21 @@ class UserCreate(UserBase):
     class Config:
         orm_mode = True
     
-class UserResponse(UserBase):
+class UserResponse(BaseModel):
     id:int
+    username: str
     role: str
+    
     class Config:
         orm_mode = True
 
 class PermissionBase(BaseModel):
-    task_id: int
+    task_id: Optional[int] = None
     user_id: int
-    can_read: bool
+    can_read: bool = True
     can_update: bool
+    can_delete: bool
+    can_write: bool
 
     class Config:
         orm_mode = True
