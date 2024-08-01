@@ -1,11 +1,11 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import date
 from uuid import UUID
 
 class TaskBase(BaseModel):
     name: str
     description: str
-    deadline: datetime
+    deadline: date
     done: bool
     
     class Config:
@@ -24,6 +24,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     class Config:
         orm_mode = True
+    
+class UserResponse(UserBase):
+    id:int
+    role: str
+    class Config:
+        orm_mode = True
 
 class PermissionBase(BaseModel):
     task_id: int
@@ -37,3 +43,7 @@ class PermissionBase(BaseModel):
 class CreatePermission(PermissionBase):
     class Config:
         orm_mode = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
