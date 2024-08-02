@@ -32,6 +32,14 @@ def get_tasks(db: Session=Depends(get_db), current_user: models.User = Depends(a
     tasks = db.query(models.Task).all()
     return tasks
 
+@router.get('/tasks/{id}', response_model=schemas.TaskBase)
+def get_task_by_id(task_id:int, db:Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_active_user)):
+    check_permissions(db, current_user.id, 'can_read')
+    task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if task is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Not found")
+    return task
+
 @router.post('/post', response_model=schemas.TaskBase) 
 def create_tasks(task:schemas.CreateTask, db:Session=Depends(get_db), current_user: models.User = Depends(auth.get_current_active_user)):
 
