@@ -1,9 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-import schemas
 from sqlalchemy.orm import Session
 from database import get_db
-import models
-import auth
+import models, auth, schemas
 from datetime import timedelta, datetime
 from typing import List, Optional
 
@@ -17,7 +15,7 @@ def check_permissions(db:Session, user_id:int, permission_required:str):
     if not permissions or not getattr(permissions, permission_required):
         raise HTTPException(status_code=403, detail=f"You don't have permission to {permission_required.replace('_', ' ')} tasks")
 
-@router.post('/token', response_model=schemas.Token)
+@router.post('/token', response_model=schemas.Token)  
 def login_for_access_token(db: Session = Depends(get_db), form_data: auth.OAuth2PasswordRequestForm = Depends()):
     user = auth.authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -28,13 +26,13 @@ def login_for_access_token(db: Session = Depends(get_db), form_data: auth.OAuth2
     access_token = auth.create_access_token(data = {'sub':user.username}, expires_delta=access_token_expires)
     return {'access_token':access_token, 'token_type':'bearer'}
 
-@router.get('/tasks', response_model=List[schemas.TaskBase])
+@router.get('/tasks', response_model=List[schemas.TaskBase])  
 def get_tasks(db: Session=Depends(get_db), current_user: models.User = Depends(auth.get_current_active_user)):
     check_permissions(db, current_user.id, 'can_read')
     tasks = db.query(models.Task).all()
     return tasks
 
-@router.post('/post', response_model=schemas.TaskBase)
+@router.post('/post', response_model=schemas.TaskBase) 
 def create_tasks(task:schemas.CreateTask, db:Session=Depends(get_db), current_user: models.User = Depends(auth.get_current_active_user)):
 
     check_permissions(db, current_user.id, 'can_write')
@@ -79,17 +77,17 @@ def delete_task(task_id: int, db:Session=Depends(get_db), current_user: models.U
 @router.put('/update/{task_id}', response_model=schemas.TaskBase)
 def update_tasks(update_task: schemas.TaskBase, task_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_active_user)):
     check_permissions(db, current_user.id, 'can_update')
-    task_query = db.query(models.Task).filter(models.Task.id == task_id).first()
-    if not task_query:
+    task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if not task:
         raise HTTPException(status_code=404, detail='Task not found')
-    
     task_data = update_task.dict(exclude_unset=True)
-    task_query.update(task_data, synchronize_session=False)
+    for key, value in task_data.items():
+        setattr(task, key, value)
     db.commit()
-    
-    return task_query.first()
+    db.refresh(task)
+    return task
 
-@router.put('/tasks/{id}/permissions', response_model=schemas.PermissionBase)
+@router.put('/tasks/{id}/permissions', response_model=schemas.PermissionBase) 
 def update_permission(id: int, permission: schemas.PermissionBase, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
     db_permission = db.query(models.Permission).filter(models.Permission.id == id).first()
     if not db_permission:
@@ -106,7 +104,7 @@ def update_permission(id: int, permission: schemas.PermissionBase, db: Session =
 
 
 @router.post('/register')
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)): 
     db_user = db.query(models.User).filter(models.User.username == user.username).first()
     if db_user:
          raise HTTPException(status_code=400, detail="Username already registered")
@@ -119,7 +117,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return new_user
 
 
-def create_user_permissions(db: Session, user_id: int, role: models.RoleEnum):
+def create_user_permissions(db: Session, user_id: int, role: models.RoleEnum): 
     if role == models.RoleEnum.user:
         new_permission = models.Permission(
             user_id=user_id,

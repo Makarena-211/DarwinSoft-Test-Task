@@ -1,13 +1,11 @@
 from fastapi import status, Depends, HTTPException
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import schemas
 from datetime import datetime, timedelta
 
 import jwt
 from sqlalchemy.orm import Session
-import models
-import database
+import models, database
 
 SECRET_KEY = "TEST"
 ALGORITHM = "HS256"
@@ -18,7 +16,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
-    
+
 def get_password_hash(password):
     return pwd_context.hash(password)
 
