@@ -54,7 +54,7 @@ def get_current_user(db: Session = Depends(database.get_db), token: str = Depend
         username: str = payload.get('sub')
         if username is None:
             raise credentials_exception
-    except jwt.PyJWTErrorr:
+    except jwt.exceptions.InvalidTokenError:
         raise credentials_exception
     user = get_user(db, username)
     if user is None:

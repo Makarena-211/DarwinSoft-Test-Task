@@ -49,6 +49,20 @@ def create_tasks(task:schemas.CreateTask, db:Session=Depends(get_db), current_us
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
+
+    existing_permission = db.query(models.Permission).filter(models.Permission.user_id == current_user.id,  models.Permission.task_id == None).first()
+    if existing_permission:
+        existing_permission.task_id = new_task.id
+    else:
+        new_permission = models.Permission(
+                task_id=new_task.id,
+                user_id=current_user.id,
+                can_read=True,
+                can_write=True,
+                can_update=False,
+                can_delete=False)
+        db.add(new_permission)
+    db.commit()
     return new_task
 
 @router.delete('/delete/{task_id}')
@@ -75,16 +89,9 @@ def update_tasks(update_task: schemas.TaskBase, task_id: int, db: Session = Depe
     
     return task_query.first()
 
-@router.put('/tasks/{user_id}/permissions', response_model=schemas.PermissionBase)
-def update_permission(user_id: int, permission: schemas.PermissionBase, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
-    db_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
-    db_permission = db.query(models.Permission).filter(
-        models.Permission.user_id == user_id,
-        models.Permission.task_id == permission.task_id
-    ).first()
-
+@router.put('/tasks/{id}/permissions', response_model=schemas.PermissionBase)
+def update_permission(id: int, permission: schemas.PermissionBase, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_admin_user)):
+    db_permission = db.query(models.Permission).filter(models.Permission.id == id).first()
     if not db_permission:
         raise HTTPException(status_code=404, detail="Permission not found")
 
